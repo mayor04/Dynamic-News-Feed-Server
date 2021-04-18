@@ -1,0 +1,126 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+
+<body>
+    <div>Links</div>
+    <input type="text" size="50%" name="links" id="links">
+    <span id='paste' onclick="paste()">Paste</span>
+    <div style="margin-bottom: 10; margin-top: 10" id="inter"></div>
+    <div>Tags</div>
+    <input type="text" name="tag">
+    <input type="text" name="tag">
+    <input type="text" name="tag">
+    <div>Rating</div>
+    <input type="number" id="rating">
+    <div style="height: 10"></div>
+    <label for="video">Video</label>
+    <input type="checkbox" name="video" id="video">
+    <div style="height: 30"></div>
+    <div id="response"></div>
+    <button onclick="addNews()">Send it</button>
+
+</body>
+<script>
+    var check = ['Politics', 'Entertainment', 'Tech', 'Science',
+        'Bussiness', 'Sport', 'Misc', 'World', 'Local']
+    var inter = id('inter');
+
+    var elemList = [];
+    var select = '';
+
+    selectItem();
+    function selectItem() {
+        inter.innerHTML = '';
+        for (let i = 0; i < check.length; i++) {
+            var element = document.createElement('span');
+
+            element.id = check[i]
+            element.innerHTML = check[i] + ', ';
+            element.onclick = function (i) { changeInterest(i) };
+
+            if (check[i] == select) {
+                element.style.backgroundColor = 'green';
+            }
+
+            inter.appendChild(element);
+        }
+    }
+
+    function changeInterest(e) {
+        select = e.target.id;
+        selectItem();
+    }
+
+    function paste(){
+        navigator.clipboard.readText().then(clipText=>{
+            console.log(clipText);
+            id('links').value = clipText;
+        })
+    }
+
+    function addNews() {
+        var link = id('links').value;
+        var tagsElements = document.getElementsByName('tag');
+        var rating = id('rating').value;
+        var video = id('video').checked;
+
+        var tagString = ''
+        var response = id('response');
+
+        var queryString = 'link=' + link + '&rating=' + rating + '&video=' + video
+        var isTagPresent = false;
+
+        for (let i = 0; i < tagsElements.length; i++) {
+            var value = tagsElements[i].value;
+            if (value != '') {
+                if(!isTagPresent){
+                    tagString = 'tags[' + i + ']=' + value;
+                }
+                else{
+                    tagString += '&tags[' + i + ']=' + value;
+                }
+                
+                isTagPresent = true   
+            }
+        }
+        queryString += '&'+tagString+'&interest='+select;
+
+        if (rating == '') rating = 0;
+        rating = Number(rating);
+
+        if (!isTagPresent || link == '' || select == '') {
+            response.innerHTML = 'Enter at least a tag and link or select interest'
+            return
+        };
+
+        console.log(queryString);
+
+        var xhttp = new XMLHttpRequest()
+        xhttp.onreadystatechange = function () {
+            console.log('hey', this.readyState, this.responseText, this.status);
+            if (this.readyState == 4 && this.status == 200) {
+                select = '';
+                selectItem();
+
+                response.innerHTML = this.responseText;
+            }
+        }
+        xhttp.open('GET', 'http://95.179.232.17:3000/metadata?' + queryString, true);
+        xhttp.send();
+    }
+
+    function showValues() {
+    }
+
+    function id(id) {
+        return document.getElementById(id);
+    }
+</script>
+
+</html>
